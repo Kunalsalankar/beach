@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "649849023758",
+    "project_id": "beachpro-9e40c",
+    "storage_bucket": "beachpro-9e40c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:649849023758:android:b66132f3118bfe769b3b5f",
+        "android_client_info": {
+          "package_name": "com.example.nutan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA16JO8JojdMLI0CUPjabu0Sd4go5u19Lo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
