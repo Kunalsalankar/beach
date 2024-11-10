@@ -4,183 +4,185 @@ import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-void main() {
-  runApp(MyApp());
+// Example data structure for a beach
+class Beach {
+  final String name;
+  final String location;
+  final List<double> coordinates;
+  double? temperature;
+
+  Beach({
+    required this.name,
+    required this.location,
+    required this.coordinates,
+    this.temperature,
+  });
 }
 
-class MyApp extends StatelessWidget {
+class MapPage extends StatefulWidget {
+  final Map<String, dynamic> selectedBeach;
+  final List<Map<String, dynamic>> allBeaches;
+
+  const MapPage({
+    Key? key,
+    required this.selectedBeach,
+    required this.allBeaches,
+  }) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: MapScreen(),
-    );
-  }
+  State<MapPage> createState() => _MapPageState();
 }
 
-class MapScreen extends StatefulWidget {
-  @override
-  _MapScreenState createState() => _MapScreenState();
-}
-
-class _MapScreenState extends State<MapScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final List<Map<String, dynamic>> beaches = [
-    {
-      "name": "Kochi Beach",
-      "city": "Kochi",
-      "state": "Kerala",
-      "coordinates": LatLng(9.9356, 76.2813),
-      "description": "A beautiful beach known for its stunning sunsets and Chinese fishing nets."
-    },
-    {
-      "name": "Calangute Beach",
-      "city": "Calangute",
-      "state": "Goa",
-      "coordinates": LatLng(15.5494, 73.7535),
-      "description": "One of the most popular beaches in Goa, known for its nightlife and water sports."
-    },
-
-    {
-      "name": "Baga Beach",
-      "city": "Goa",
-      "state": "Goa",
-      "coordinates": LatLng(15.5524, 73.7517),
-      "description": "Famous for its vibrant nightlife and water sports."
-    },
-    {
-      "name": "Calangute Beach",
-      "city": "Calangute",
-      "state": "Goa",
-      "coordinates": LatLng(15.5494, 73.7535),
-      "description": "One of the most popular beaches in Goa, known for its nightlife and water sports."
-    },
-    {
-      "name": "Kovalam Beach",
-      "city": "Kovalam",
-      "state": "Kerala",
-      "coordinates": LatLng(8.3985, 76.9969),
-      "description": "Famous for its crescent-shaped beaches and lighthouses."
-    },
-    {
-      "name": "RK Beach",
-      "city": "Visakhapatnam",
-      "state": "Andhra Pradesh",
-      "coordinates": LatLng(17.6880, 83.3042),
-      "description": "Known for its picturesque beach promenade and sunset views."
-    },
-    {
-      "name": "Alibag Beach",
-      "city": "Alibag",
-      "state": "Maharashtra",
-      "coordinates": LatLng(18.6400, 72.8339),
-      "description": "A sandy beach popular for its scenic views and water sports."
-    },
-    {
-      "name": "Varsoli Beach",
-      "city": "Alibag",
-      "state": "Maharashtra",
-      "coordinates": LatLng(18.3462, 72.8252),
-      "description": "Known for its calm waters and peaceful surroundings."
-    },
-    {
-      "name": "Varkala Beach",
-      "city": "Varkala",
-      "state": "Kerala",
-      "coordinates": LatLng(8.7330, 76.7116),
-      "description": "Known for its cliffs and stunning views."
-    },
-    {
-      "name": "Anjuna Beach",
-      "city": "Anjuna",
-      "state": "Goa",
-      "coordinates": LatLng(15.5733, 73.7410),
-      "description": "Famous for its flea market and vibrant atmosphere."
-    },
-    {
-      "name": "Juhu Beach",
-      "city": "Mumbai",
-      "state": "Maharashtra",
-      "coordinates": LatLng(19.0974, 72.8264),
-      "description": "A popular beach known for its street food and Bollywood connections."
-    },
-    {
-      "name": "Puri Beach",
-      "city": "Puri",
-      "state": "Odisha",
-      "coordinates": LatLng(19.8145, 85.8312),
-      "description": "Known for its golden sands and the annual Rath Yatra."
-    },
-    {
-      "name": "Mahabalipuram Beach",
-      "city": "Mahabalipuram",
-      "state": "Tamil Nadu",
-      "coordinates": LatLng(12.6192, 80.2029),
-      "description": "Famous for its rock-cut temples and historical significance."
-    },
-
-
-    // Add more beaches here if needed
-  ];
-  List<Map<String, dynamic>> _filteredBeaches = [];
-  late final MapController _mapController;
+class _MapPageState extends State<MapPage> {
+  final MapController _mapController = MapController();
+  bool isLoading = true;
+  List<Beach> beaches = [];
 
   @override
   void initState() {
     super.initState();
-    _mapController = MapController();
-    _filteredBeaches = beaches;
+    beaches = [
+      Beach(
+        name: widget.selectedBeach['name'],
+        location: widget.selectedBeach['location'],
+        coordinates: List<double>.from(widget.selectedBeach['coordinates']),
+      ),
+      ...widget.allBeaches.map((beach) => Beach(
+        name: beach['name'],
+        location: beach['location'],
+        coordinates: List<double>.from(beach['coordinates']),
+      )),
+    ];
+    _fetchTemperatures();
   }
 
-  void _filterResults(String query) {
-    setState(() {
-      _filteredBeaches = beaches
-          .where((beach) =>
-          beach["name"].toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
+  Future<void> _fetchTemperatures() async {
+    setState(() => isLoading = true);
+
+    for (var beach in beaches) {
+      try {
+        final temperature = await _getTemperature(
+          beach.coordinates[0],
+          beach.coordinates[1],
+        );
+        setState(() {
+          beach.temperature = temperature;
+        });
+      } catch (e) {
+        debugPrint('Error fetching temperature for ${beach.name}: $e');
+      }
+    }
+
+    setState(() => isLoading = false);
   }
 
-  Future<String> _getWeather(double lat, double lon) async {
+  Future<double> _getTemperature(double lat, double lon) async {
     final url = Uri.parse(
-        "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current_weather=true");
+      'https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current_weather=true',
+    );
     final response = await http.get(url);
+
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      final weather = data['current_weather'];
-      return "Current temperature: ${weather['temperature']}°C, Wind Speed: ${weather['windspeed']} m/s";
+      return data['current_weather']['temperature'].toDouble();
     } else {
-      throw Exception("Failed to load weather data");
+      throw Exception('Failed to load weather data');
     }
   }
 
-  void _showBeachDetails(Map<String, dynamic> beach) async {
-    final weatherInfo = await _getWeather(
-        beach["coordinates"].latitude, beach["coordinates"].longitude);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(beach["name"]),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("${beach["city"]}, ${beach["state"]}"),
-              SizedBox(height: 10),
-              Text(beach["description"]),
-              SizedBox(height: 10),
-              Text(weatherInfo, style: TextStyle(
-                  fontStyle: FontStyle.italic, color: Colors.blue)),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Close"),
+  Color _getTemperatureColor(double temperature) {
+    if (temperature >= 24 && temperature <= 35) {
+      return Colors.green; // Safe zone
+    } else if ((temperature >= 20 && temperature <= 23) ||
+        (temperature >= 31 && temperature <= 33)) {
+      return Colors.yellow; // Moderately Safe zone
+    } else if ((temperature >= 18 && temperature <= 19) ||
+        (temperature >= 34 && temperature <= 35)) {
+      return Colors.orange; // Cautious zone
+    } else {
+      return Colors.red; // Unsafe zone
+    }
+  }
+
+  List<CircleMarker> _buildHeatmapCircles(Beach beach) {
+    if (beach.temperature == null) return [];
+
+    final baseColor = _getTemperatureColor(beach.temperature!);
+    final location = LatLng(beach.coordinates[0], beach.coordinates[1]);
+
+    // Increased radii values for better visibility
+    final List<Map<String, double>> circles = [
+      {'radius': 5000, 'opacity': 0.1}, // Larger outer circle
+      {'radius': 3500, 'opacity': 0.2},
+      {'radius': 2000, 'opacity': 0.3},
+      {'radius': 1000, 'opacity': 0.4}, // Smaller inner circle
+    ];
+
+    return circles.map((circle) {
+      return CircleMarker(
+        point: location,
+        radius: circle['radius']!,
+        useRadiusInMeter: true,
+        color: baseColor.withOpacity(circle['opacity']!),
+        borderColor: Colors.transparent,
+        borderStrokeWidth: 0,
+      );
+    }).toList();
+  }
+
+  Widget _buildLegend() {
+    return Positioned(
+      right: 16,
+      top: 16,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
             ),
           ],
-        );
-      },
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Temperature',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _legendItem(Colors.blue, 'Safe: 24-30°C'),
+            _legendItem(Colors.green, 'Moderately Safe: 20-23°C & 31-33°C'),
+            _legendItem(Colors.orange, 'Cautious: 18-19°C & 34-35°C'),
+            _legendItem(Colors.red, 'Unsafe: <18°C & >35°C'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _legendItem(Color color, String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
+      ),
     );
   }
 
@@ -188,52 +190,88 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Map - Shore Shield"),
-        backgroundColor: Colors.blue, // Replace 'Colors.blue' with your preferred color
+        title: const Text('Beach Temperature Map'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _fetchTemperatures,
+          ),
+        ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _filterResults,
-              decoration: InputDecoration(
-                hintText: "Search for a beach...",
-                border: OutlineInputBorder(),
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: LatLng(8.7370, 76.7066), // Centered on Kerala
+              initialZoom: 9.5, // Adjusted zoom level for better visibility
+              minZoom: 7, // Added minimum zoom constraint
+              maxZoom: 18, // Added maximum zoom constraint
+              interactionOptions: const InteractionOptions(
+                enableMultiFingerGestureRace: true,
               ),
             ),
-          ),
-          Expanded(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                // Initial zoom level
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.example.app',
+                maxZoom: 19,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  subdomains: ['a', 'b', 'c'],
-                ),
-
-              ],
-            ),
-          ),
-          if (_filteredBeaches.isNotEmpty)
-            Container(
-              height: 100,
-              child: ListView.builder(
-                itemCount: _filteredBeaches.length,
-                itemBuilder: (context, index) {
-                  final beach = _filteredBeaches[index];
-                  return ListTile(
-                    title: Text(beach["name"]),
-                    onTap: () {
-                      _mapController.move(beach["coordinates"], 10.0);
-                      _showBeachDetails(beach);
-                    },
+              CircleLayer(
+                circles:
+                beaches.expand((beach) => _buildHeatmapCircles(beach)).toList(),
+              ),
+              MarkerLayer(
+                markers: beaches.map((beach) {
+                  return Marker(
+                    point: LatLng(beach.coordinates[0], beach.coordinates[1]),
+                    width: 40,
+                    height: 40,
+                    child: GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(beach.name),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Location: ${beach.location}'),
+                                if (beach.temperature != null)
+                                  Text(
+                                    'Temperature: ${beach.temperature!.toStringAsFixed(1)}°C',
+                                  ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: Icon(
+                        Icons.location_on,
+                        color: beach.temperature != null
+                            ? _getTemperatureColor(beach.temperature!)
+                            : Colors.grey,
+                        size: 40,
+                      ),
+                    ),
                   );
-                },
+                }).toList(),
+              ),
+            ],
+          ),
+          _buildLegend(),
+          if (isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(
+                child: CircularProgressIndicator(),
               ),
             ),
         ],
