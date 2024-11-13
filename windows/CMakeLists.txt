@@ -48,8 +48,8 @@ endfunction()
 # Flutter library and tool build rules.
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
 add_subdirectory(${FLUTTER_MANAGED_DIR})
-
-# Application build; see runner/CMakeLists.txt.
+build
+# Application ; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 
 

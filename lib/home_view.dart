@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
-import 'beach_detail.dart';
+import 'calcungata.dart';
+import 'kochi.dart';
+import 'kovalam.dart';
+import 'Varsoli.dart';
+import 'Anjuna.dart';
+import 'Alibag.dart';
+import 'Visakhapatnam.dart';
 
 class HomeView extends StatefulWidget {
   @override
@@ -7,186 +13,252 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  final TextEditingController _searchController = TextEditingController();
-
-  List<Map<String, dynamic>> beaches = [
+  final List<Map<String, dynamic>> beaches = [
     {
-      'name': 'Baga Beach',
-      'location': 'Goa',
-      'image': 'assets/files/baga.jpg',
-      'description': 'Famous for its vibrant nightlife and water sports.',
-      'coordinates': [15.5524, 73.7517]
+      'name': 'Kochi',
+      'location': 'Kochi, Kerala',
+      'image': 'assets/files/kochi.png',
+      'description': 'A serene beach known for its pristine waters and fishing activities. This beautiful...',
+      'coordinates': [9.9672, 76.2444],
+      'activities': ['Fishing', 'Sunset viewing', 'Photography'],
+      'routeName': 'kochi'
     },
     {
-      'name': 'Calangute Beach',
-      'location': 'Goa',
-      'image': 'assets/files/calcanguta.jpg',
-      'description': 'One of the most popular beaches in Goa, known for its nightlife and water sports.',
-      'coordinates': [15.5494, 73.7535]
-    },
-    {
-      'name': 'Kovalam Beach',
-      'location': 'Kerala',
-      'image': 'assets/files/kovalam.jpg',
-      'description': 'Famous for its crescent-shaped beaches and lighthouses.',
-      'coordinates': [8.3985, 76.9969]
-    },
-    {
-      'name': 'RK Beach',
+      'name': 'Visakhapatnam',
       'location': 'Andhra Pradesh',
-      'image': 'assets/files/Rk_beach.jpg',
-      'description': 'Known for its picturesque beach promenade and sunset views.',
-      'coordinates': [17.6880, 83.3042]
-    },
-    {
-      'name': 'Alibag Beach',
-      'location': 'Maharashtra',
-      'image': 'assets/files/Alibag.png',
-      'description': 'A sandy beach popular for its scenic views and water sports.',
-      'coordinates': [18.6400, 72.8339]
-    },
-    {
-      'name': 'Varsoli Beach',
-      'location': 'Maharashtra',
-      'image': 'assets/files/varsoli.png',
-      'description': 'Known for its calm waters and peaceful surroundings.',
-      'coordinates': [18.3462, 72.8252]
-    },
-    {
-      'name': 'Varkala Beach',
-      'location': 'Kerala',
-      'image': 'assets/files/varkala.png',
-      'description': 'Known for its cliffs and stunning views.',
-      'coordinates': [8.7330, 76.7116]
-    },
-    {
-      'name': 'Anjuna Beach',
-      'location': 'Goa',
-      'image': 'assets/files/anguna.png',
-      'description': 'Famous for its flea market and vibrant atmosphere.',
-      'coordinates': [15.5733, 73.7410]
-    },
-    {
-      'name': 'Juhu Beach',
-      'location': 'Maharashtra',
-      'image': 'assets/files/img.png',
-      'description': 'A popular beach known for its street food and Bollywood connections.',
-      'coordinates': [19.0974, 72.8264]
-    },
-    {
-      'name': 'Puri Beach',
-      'location': 'Odisha',
-      'image': 'assets/files/img_1.png',
-      'description': 'Known for its golden sands and the annual Rath Yatra.',
-      'coordinates': [19.8145, 85.8312]
-    },
-    {
-      'name': 'Mahabalipuram Beach',
-      'location': 'Tamil Nadu',
-      'image': 'assets/files/img_2.png',
-      'description': 'Famous for its rock-cut temples and historical significance.',
-      'coordinates': [12.6192, 80.2029]
-    },
-    // Add other beach data with coordinates as needed
+      'image': 'assets/files/img_26.png',
+      'description': 'A coastal city with beautiful beaches, rich history, and scenic views of the Bay of Bengal.',
+      'coordinates': [17.6868, 83.2185],
+      'activities': ['Beach activities', 'Historical tours', 'Photography', 'Fishing'],
+      'routeName': 'visakhapatnam'
+    }
+
+    // Add other beaches here
   ];
 
   List<Map<String, dynamic>> filteredBeaches = [];
+  String searchQuery = '';
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     filteredBeaches = beaches;
-    _searchController.addListener(_filterBeaches);
   }
 
-  void _filterBeaches() {
-    final query = _searchController.text.toLowerCase();
+  void updateSearchQuery(String query) {
     setState(() {
+      searchQuery = query.toLowerCase();
       filteredBeaches = beaches.where((beach) {
-        return beach['name'].toLowerCase().contains(query);
+        final name = beach['name']?.toString().toLowerCase() ?? '';
+        final location = beach['location']?.toString().toLowerCase() ?? '';
+        return name.contains(searchQuery) || location.contains(searchQuery);
       }).toList();
     });
+  }
+
+  void navigateToBeachPage(BuildContext context, Map<String, dynamic> beach) {
+    final routeName = beach['routeName']?.toString().toLowerCase() ?? '';
+
+    switch (routeName) {
+      case 'kochi':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => KochiBeachesPage()),
+        );
+        break;
+      case 'calangute':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CalanguteBeachesPage()),
+        );
+        break;
+      case 'kovalam':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => KovalamBeachesPage()),
+        );
+        break;
+      case 'varsoli':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => VarsoliBeachesPage()),
+        );
+        break;
+      case 'anjuna':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AnjunaBeachesPage()),
+        );
+        break;
+      case 'alibag':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AlibagBeachesPage()),
+        );
+        break;
+      case 'visakhapatnam':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => VisakhapatnamBeachesPage()),
+        );
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Beach Explorer'),
+        title: Text(
+          "Kochi Beaches",
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: Colors.blue,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Column(
         children: [
+          // Search Bar Container
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search for a beach...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search for a beach...',
+                  hintStyle: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                  ),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 ),
+                onChanged: updateSearchQuery,
               ),
             ),
           ),
+          // Beach List
           Expanded(
-            child: GridView.builder(
-              padding: EdgeInsets.all(16.0),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.75,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
+            child: filteredBeaches.isEmpty
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.search_off, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No beaches found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
               ),
+            )
+                : ListView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: filteredBeaches.length,
               itemBuilder: (context, index) {
                 final beach = filteredBeaches[index];
                 return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BeachDetailPage(beach: beach),
-                      ),
-                    );
-                  },
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  onTap: () => navigateToBeachPage(context, beach),
+                  child: Container(
+                    margin: EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(12),
-                            ),
-                            child: Image.asset(
-                              beach['image'],
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                            ),
+                        // Beach Image
+                        ClipRRect(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                          child: Image.asset(
+                            beach['image'] ?? 'assets/files/placeholder.jpg',
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 200,
+                                color: Colors.grey[300],
+                                child: Center(
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    size: 40,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
+                        // Beach Information
                         Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            beach['name'],
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                          child: Row(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.location_on, size: 16, color: Colors.grey),
-                              SizedBox(width: 4),
                               Text(
-                                beach['location'],
-                                style: TextStyle(color: Colors.grey),
+                                beach['name'] ?? 'Unnamed Beach',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on,
+                                    size: 20,
+                                    color: Colors.grey[600],
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    beach['location'] ?? 'Unknown Location',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                beach['description'] ?? '',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                  height: 1.4,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
